@@ -182,6 +182,7 @@ public class App : MonoBehaviour
 		this.img_status_record.sprite = this.sp_icon_recording;
 		this.obj_btn_play.SetActive(true);
 		Microphone.End(this.s_cur_device_name);
+		this.carrot.play_vibrate();
 	}
 
 	public static AudioClip Combine(List<AudioClip> clips)
