@@ -1,5 +1,3 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -30,8 +28,10 @@ public class App : MonoBehaviour
 	public Sprite sp_icon_list_record;
 	public Sprite sp_icon_list_device;
 	public Sprite sp_icon_maximum_duration;
+	public Sprite sp_icon_audio_channels;
+    public Sprite sp_icon_audio_stereo;
 
-	public GameObject panel_control_record;
+    public GameObject panel_control_record;
 	public GameObject panel_control_play;
 
 	[Header("Ui Recording")]
@@ -47,7 +47,12 @@ public class App : MonoBehaviour
 	public Text txt_time_length_record;
 	public Slider slider_timer_audio;
 
-	private bool is_record=false;
+	[Header("Setting")]
+	public AudioSource audio_setting_test;
+	private Carrot.Carrot_Box box_audio_channels;
+	private Carrot.Carrot_Box_Item item_channels_left_right;
+
+    private bool is_record=false;
 	private bool is_playing_record = false;
 
 	private int width = 500;
@@ -347,14 +352,66 @@ public class App : MonoBehaviour
 		this.carrot.ads.show_ads_Interstitial();
 		Carrot.Carrot_Box box_setting = this.carrot.Create_Setting();
 
-		Carrot.Carrot_Box_Item setting_time_record = box_setting.create_item_of_top();
+        Carrot.Carrot_Box_Item test_audio_channels = box_setting.create_item_of_top();
+        test_audio_channels.set_title("Check audio channels");
+        test_audio_channels.set_tip("Check the audio channels on your device");
+        test_audio_channels.set_icon(this.sp_icon_audio_channels);
+        test_audio_channels.set_act(check_audio_channels);
+
+        Carrot.Carrot_Box_Item setting_time_record = box_setting.create_item_of_top();
 		setting_time_record.set_title("Recorder maximum duration");
 		setting_time_record.set_tip("Change recorder duration");
 		setting_time_record.set_icon(this.sp_icon_maximum_duration);
 		setting_time_record.set_act(change_timer_record);
+
+		box_setting.set_act_before_closing(this.close_setting);
+    }
+
+	private void close_setting()
+	{
+		if (this.box_audio_channels != null) this.box_audio_channels.close();
+		this.audio_setting_test.Stop();
 	}
 
-	private void change_timer_record()
+	private void check_audio_channels()
+	{
+		if (this.box_audio_channels != null) this.box_audio_channels.close();
+
+		this.box_audio_channels = this.carrot.Create_Box("check_audio_channels");
+		box_audio_channels.set_title("Check audio channels");
+        box_audio_channels.set_icon(this.sp_icon_audio_channels);
+
+        this.item_channels_left_right=box_audio_channels.create_item("left_right");
+        this.item_channels_left_right.set_title("Adjust left and right");
+		this.item_channels_left_right.set_icon(this.sp_icon_audio_stereo);
+        this.item_channels_left_right.set_type(Carrot.Box_Item_Type.box_value_slider);
+        this.item_channels_left_right.set_val("0");
+        this.item_channels_left_right.check_type();
+        this.item_channels_left_right.set_tip("Check that the speakers play the left and right audio channels correctly");
+
+        this.item_channels_left_right.slider_val.maxValue = 1f;
+        this.item_channels_left_right.slider_val.minValue = -1f;
+        this.item_channels_left_right.slider_val.value = 0f;
+
+
+        this.item_channels_left_right.slider_val.onValueChanged.RemoveAllListeners();
+		this.item_channels_left_right.slider_val.onValueChanged.AddListener(change_slider_audio_channels);
+
+        this.audio_setting_test.Play();
+		box_audio_channels.set_act_before_closing(this.close_check_audio_channels);
+	}
+
+    private void close_check_audio_channels()
+	{
+		this.audio_setting_test.Stop();
+    }
+	private void change_slider_audio_channels(float f_val)
+	{
+		this.audio_setting_test.panStereo = this.item_channels_left_right.slider_val.value;
+        this.item_channels_left_right.txt_tip.text = this.item_channels_left_right.slider_val.value.ToString();
+    }
+
+    private void change_timer_record()
     {
 		this.carrot.ads.show_ads_Interstitial();
 		this.box_timer_record = this.carrot.Create_Box();
